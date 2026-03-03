@@ -28,8 +28,29 @@ const Header = ({ onMenuToggle, showSearch = false }) => {
     }
   };
 
+  const handleChangePassword = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        // "http://localhost:5000/api/auth/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      localStorage.removeItem("token");
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
-    <header className="bg-white shadow-sm border-b sticky z-40 top-0">
+    <header className="bg-white shadow-sm border-b sticky z-50 top-0">
       <div className="flex justify-between items-center h-16 mx-4 md:mx-10">
         <div className="flex items-center space-x-2">
           <img src="/mjs-logo.png" alt="Logo" className="h-10" />
@@ -79,11 +100,35 @@ const Header = ({ onMenuToggle, showSearch = false }) => {
             </div>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 top-12 bg-white shadow-md rounded-md border w-40 z-50">
+              <div className="absolute right-0 top-12 bg-white shadow-md rounded-md border w-52 z-50">
+                <div className="flex items-center text-sm px-4 py-5 gap-x-2">
+                  <img
+                    src="/icon-profile.png"
+                    alt="User"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="text-[#9E9E9E]">Dina Permata Sari</span>
+                </div>
+                <button
+                  onClick={handleChangePassword}
+                  className="flex items-center w-full text-left text-[#9E9E9E] px-4 py-3 text-sm hover:bg-gray-100"
+                >
+                  <img
+                    src="/icons/lock.svg"
+                    alt="Lock Icon"
+                    className="w-4 h-4 mr-2"
+                  />
+                  Change Password
+                </button>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  className="flex items-center w-full text-left text-[#F25961] px-4 py-3 text-sm hover:bg-gray-100"
                 >
+                  <img
+                    src="/icons/logout.svg"
+                    alt="Lock Icon"
+                    className="w-4 h-4 mr-2"
+                  />
                   Logout
                 </button>
               </div>

@@ -1,0 +1,32 @@
+const WriteIcon = ({ active = false, className = "" }) => {
+  return (
+    <svg
+      className={`${className}`}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill={active ? "#3AAFA9" : "#888888"}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <mask
+        id="mask0_edit"
+        style={{ maskType: "alpha" }}
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="20"
+        height="20"
+      >
+        <rect width="20" height="20" fill="#D9D9D9" />
+      </mask>
+      <g mask="url(#mask0_edit)">
+        <path
+          d="M2.91602 17.0832V14.2628L13.9081 3.27546C14.0341 3.16102 14.1732 3.07262 14.3254 3.01025C14.4778 2.94775 14.6375 2.9165 14.8046 2.9165C14.9716 2.9165 15.1334 2.94616 15.29 3.00546C15.4466 3.06477 15.5853 3.15907 15.706 3.28838L16.7237 4.3188C16.853 4.43949 16.9452 4.57838 17.0002 4.73546C17.0552 4.89255 17.0827 5.04963 17.0827 5.20671C17.0827 5.37435 17.0541 5.53428 16.9969 5.6865C16.9396 5.83887 16.8486 5.97803 16.7237 6.104L5.73643 17.0832H2.91602ZM14.626 6.41171L15.8327 5.21296L14.7862 4.1665L13.5875 5.37317L14.626 6.41171Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  );
+};
+
+export default WriteIcon;

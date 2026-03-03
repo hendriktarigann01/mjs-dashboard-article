@@ -1,46 +1,80 @@
-import {
-  LayoutDashboard,
-  Edit3,
-  FileText,
-  FolderOpen,
-  ChevronDown,
-} from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ChevronDown, ChevronRight, Dot } from "lucide-react";
+import DashboardIcon from "../icons/DashboardIcon";
+import WriteIcon from "../icons/WriteIcon";
+import AssignmentIcon from "../icons/PublishedIcon";
+import FolderIcon from "../icons/FolderIcon";
 
 const Navbar = ({ isOpen, onClose }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(true); // Set default true
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
     {
-      icon: LayoutDashboard,
+      icon: DashboardIcon,
       label: "Dashboard",
-      active: true,
+      active: location.pathname === "/dashboard",
       path: "/dashboard",
     },
     {
-      icon: Edit3,
+      icon: WriteIcon,
       label: "Write",
-      active: false,
+      active: location.pathname.startsWith("/write"),
       path: "/write",
       hasDropdown: true,
+      dropdownItems: [
+        {
+          icon: Dot,
+          label: "Create News",
+          path: "/write/create-news",
+        },
+        {
+          icon: Dot,
+          label: "Create Project",
+          path: "/write/create-project",
+        },
+      ],
     },
     {
-      icon: FileText,
+      icon: AssignmentIcon,
       label: "Published",
-      active: false,
+      active: location.pathname === "/published",
       path: "/published",
     },
     {
-      icon: FolderOpen,
+      icon: FolderIcon,
       label: "Drafts",
-      active: false,
+      active: location.pathname === "/drafts",
       path: "/drafts",
     },
   ];
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleItemClick = (item) => {
+    if (item.hasDropdown) {
+      toggleDropdown();
+    } else {
+      navigate(item.path);
+      if (onClose) onClose();
+    }
+  };
+
+  const handleDropdownItemClick = (dropdownItem) => {
+    navigate(dropdownItem.path);
+    // Tidak menutup dropdown dan navbar - biarkan tetap terbuka
+  };
 
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 -z-1 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={onClose}
         />
       )}
@@ -48,10 +82,11 @@ const Navbar = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <div
         className={`
-        fixed inset-y-0 left-0 -z-1 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0 md:static md:inset-0
-      `}
+                    z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+                    fixed inset-y-0 left-0
+                    ${isOpen ? "translate-x-0" : "-translate-x-full"}
+                    md:sticky md:top-0 md:translate-x-0 md:h-screen
+                  `}
       >
         <div className="flex flex-col h-full pt-16 md:pt-0">
           {/* Navigation Menu */}
@@ -59,35 +94,76 @@ const Navbar = ({ isOpen, onClose }) => {
             <ul className="space-y-2">
               {menuItems.map((item, index) => (
                 <li key={index}>
-                  <a
-                    href={item.path}
-                    className={`
-        flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150
-        ${
-          item.active
-            ? "bg-secondary text-primary border-r-2 border-primary"
-            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-        }
-      `}
-                  >
-                    <div className="flex items-center">
-                      <item.icon
-                        className={`
-                                    mr-3 h-5 w-5 flex-shrink-0
-                                    ${item.active ? "text-primary" : "text-gray-400"}
-                                  `}
-                      />
-                      {item.label}
-                    </div>
+                  <div>
+                    {/* Main menu item */}
+                    <button
+                      onClick={() => handleItemClick(item)}
+                      className={`
+                        w-full flex items-center justify-between px-4 py-4 text-sm font-medium rounded-md transition-colors duration-150
+                      ${
+                        item.active
+                          ? "bg-secondary text-primary border-r-2 border-primary"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      }
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon
+                          active={item.active}
+                          className="mr-3 h-5 w-5 flex-shrink-0"
+                        />
+                        {item.label}
+                      </div>
 
-                    {item.hasDropdown && (
-                      <ChevronDown
-                        className={`h-4 w-4 ${
-                          item.active ? "text-primary" : "text-gray-400"
-                        }`}
-                      />
+                      {item.hasDropdown && (
+                        <div className="transition-transform duration-200">
+                          {dropdownOpen ? (
+                            <ChevronDown
+                              className={`h-4 w-4 ${
+                                item.active ? "text-primary" : "text-gray-400"
+                              }`}
+                            />
+                          ) : (
+                            <ChevronRight
+                              className={`h-4 w-4 ${
+                                item.active ? "text-primary" : "text-gray-400"
+                              }`}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Dropdown items */}
+                    {item.hasDropdown && dropdownOpen && (
+                      <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-100 pl-4">
+                        {item.dropdownItems.map(
+                          (dropdownItem, dropdownIndex) => (
+                            <button
+                              key={dropdownIndex}
+                              onClick={() =>
+                                handleDropdownItemClick(dropdownItem)
+                              }
+                              className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                location.pathname === dropdownItem.path
+                                  ? "text-primary bg-gray-50"
+                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              }`}
+                            >
+                              <dropdownItem.icon
+                                className={`mr-3 h-6 w-6 flex-shrink-0 ${
+                                  location.pathname === dropdownItem.path
+                                    ? "text-primary"
+                                    : "text-gray-400"
+                                }`}
+                              />{" "}
+                              {dropdownItem.label}
+                            </button>
+                          )
+                        )}
+                      </div>
                     )}
-                  </a>
+                  </div>
                 </li>
               ))}
             </ul>

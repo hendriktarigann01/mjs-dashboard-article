@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "../navbar/Header";
 import Navbar from "../navbar/Navbar";
+import Alert from "../components/Alert";
 
 const MainLayout = ({ children, showNavbar = true, showSearch = false }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

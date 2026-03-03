@@ -1,29 +1,31 @@
 import { useState } from "react";
-import { LayoutDashboard, MoreHorizontal, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ChevronRight } from "lucide-react";
 import MainLayout from "./MainLayout";
 import { CardData } from "../data/CardData";
 import { ChartData } from "../data/ChartData";
 import { ArticleData } from "../data/ArticlesData";
 import Chart from "../components/Chart";
+import DashboardIcon from "../icons/DashboardIcon";
 
 const Dashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("Years");
 
   return (
     <MainLayout showNavbar={true} showSearch={true}>
-      <div className="space-y-6">
+      <div className="space-y-6 min-h-screen">
         {/* Title Sections */}
         <div className="flex bg-white rounded-lg shadow-sm items-center justify-between px-6 h-[68px]">
           <div className="flex items-center text-sm">
-            <LayoutDashboard className="w-4 h-4 text-primary mr-2" />
+            <DashboardIcon className="w-5 h-5 fill-current text-[#3AAFA9] mr-4" />
+
             <span className="text-base font-semibold text-[#414853]">
               Dashboard
             </span>
           </div>
 
           <div className="flex items-center text-xs">
-            <LayoutDashboard className="w-4 h-4 text-primary mr-2" />
-            <ChevronRight className="w-4 h-4 text-primary mr-2" />
+            <DashboardIcon className="w-4 h-4 fill-current text-[#3AAFA9] mr-2" />
+            <ChevronRight className="w-4 h-4 mr-2" />
             <span className="text-[#414853]">Dashboard</span>
           </div>
         </div>
@@ -48,7 +50,7 @@ const Dashboard = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Desktop Cards */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="flex flex-col gap-6 h-full">
@@ -112,7 +114,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Article Sections */}
+        {/* Published Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left */}
           <div className="bg-white rounded-lg shadow-sm">

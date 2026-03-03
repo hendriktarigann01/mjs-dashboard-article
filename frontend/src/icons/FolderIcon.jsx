@@ -1,0 +1,32 @@
+const FolderIcon = ({ active = false, className = "" }) => {
+  return (
+    <svg
+      className={`${className}`}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill={active ? "#3AAFA9" : "#888888"}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <mask
+        id="mask0_folder"
+        style={{ maskType: "alpha" }}
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="20"
+        height="20"
+      >
+        <rect width="20" height="20" fill="#D9D9D9" />
+      </mask>
+      <g mask="url(#mask0_folder)">
+        <path
+          d="M3.59044 16.25C3.16947 16.25 2.81315 16.1042 2.52148 15.8125C2.22982 15.5208 2.08398 15.1645 2.08398 14.7435V5.25646C2.08398 4.83549 2.22982 4.47917 2.52148 4.1875C2.81315 3.89583 3.16947 3.75 3.59044 3.75H8.16565L9.83232 5.41667H16.4109C16.8318 5.41667 17.1882 5.5625 17.4798 5.85417C17.7715 6.14583 17.9173 6.50215 17.9173 6.92313V14.7435C17.9173 15.1645 17.7715 15.5208 17.4798 15.8125C17.1882 16.1042 16.8318 16.25 16.4109 16.25H3.59044Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  );
+};
+
+export default FolderIcon;
