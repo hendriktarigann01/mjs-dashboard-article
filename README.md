@@ -7,6 +7,10 @@
 
 ## ⚡ Quick Start
 ```bash
+# Clone repository
+git clone https://github.com/hendriktarigann01/tes_mjsolution.git
+cd tes_mjsolution
+
 # Install dependencies
 npm run install-all
 
@@ -46,6 +50,9 @@ fullstack-test/
 ## 🌐 Port
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:5000`
+
+## 🔧 Environment Setup
+Create a `.env` file inside the backend folder, copy the contents of `.env.example`
 
 ## 📦 Dependencies
 ### Root
