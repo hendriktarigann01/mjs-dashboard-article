@@ -8,9 +8,10 @@ import "@fontsource/poppins";
 import Dashboard from "./pages/Dashboard";
 import CreateProject from "./pages/CreateProject";
 import CreateNews from "./pages/CreateNews";
+import EditProject from "./pages/EditProject";
+import EditNews from "./pages/EditNews";
 import Published from "./pages/Published";
 import Draft from "./pages/Draft";
-
 import App from "./App";
 
 createRoot(document.getElementById("root")).render(
@@ -43,6 +44,22 @@ createRoot(document.getElementById("root")).render(
           }
         />
         <Route
+          path="/write/edit-project/:id"
+          element={
+            <ProtectedRoute>
+              <EditProject />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/write/edit-news/:id"
+          element={
+            <ProtectedRoute>
+              <EditNews />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/published"
           element={
             <ProtectedRoute>
@@ -60,5 +77,5 @@ createRoot(document.getElementById("root")).render(
         />
       </Routes>
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );

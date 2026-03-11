@@ -10,13 +10,13 @@ const MainLayout = ({ children, showNavbar = true, showSearch = false }) => {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8]">
+    <div className="h-screen flex flex-col bg-[#F8F8F8]">
       <Header onMenuToggle={toggleSidebar} showSearch={showSearch} />
 
-      <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr]">
+      <div className="flex flex-1 overflow-hidden">
         {showNavbar && <Navbar isOpen={isSidebarOpen} onClose={closeSidebar} />}
 
-        <main className="p-4 sm:p-6 md:p-8 lg:p-10">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10">
           <div className="mx-auto">{children}</div>
         </main>
       </div>

@@ -1,47 +1,46 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import api from "../lib/api";
 
 const Login = ({ onLogin }) => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (apiError) setApiError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
-    if (!formData.username.trim()) {
-      newErrors.username = "Username wajib diisi";
-    }
-    if (!formData.password.trim()) {
-      newErrors.password = "Password wajib diisi";
-    }
-
+    if (!formData.username.trim()) newErrors.username = "Username wajib diisi";
+    if (!formData.password.trim()) newErrors.password = "Password wajib diisi";
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    if (formData.username && formData.password) {
-      onLogin(formData);
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/login", formData);
+      const { token, user } = res.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      onLogin(user);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Login gagal. Coba lagi.";
+      setApiError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +49,7 @@ const Login = ({ onLogin }) => {
       <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-10">
         {/* Logo */}
         <div className="text-center my-10">
-          <img src="/mjs-logo.png" alt="Logo" className="h-11 mx-auto" />
+          <img src="/mjs-logo-text.png" alt="Logo" className="h-11 mx-auto" />
         </div>
 
         {/* Title */}
@@ -63,6 +62,13 @@ const Login = ({ onLogin }) => {
             </span>
           </p>
         </div>
+
+        {/* API Error Banner */}
+        {apiError && (
+          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+            {apiError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -80,11 +86,9 @@ const Login = ({ onLogin }) => {
               value={formData.username}
               onChange={handleChange}
               placeholder="Email or Username"
-              className={`
-              w-full px-4 py-3 border rounded-md text-sm placeholder-gray-400
-              focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500
-              ${errors.username ? "border-red-500" : "border-gray-300"}
-            `}
+              className={`w-full px-4 py-3 border rounded-md text-sm placeholder-gray-400
+                focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500
+                ${errors.username ? "border-red-500" : "border-gray-300"}`}
             />
             {errors.username && (
               <p className="text-xs text-red-500 mt-1">{errors.username}</p>
@@ -106,11 +110,9 @@ const Login = ({ onLogin }) => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Password"
-                className={`
-                w-full px-4 py-3 pr-12 border rounded-md text-sm placeholder-gray-400
-                focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500
-                ${errors.password ? "border-red-500" : "border-gray-300"}
-              `}
+                className={`w-full px-4 py-3 pr-12 border rounded-md text-sm placeholder-gray-400
+                  focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500
+                  ${errors.password ? "border-red-500" : "border-gray-300"}`}
               />
               <button
                 type="button"
@@ -131,9 +133,11 @@ const Login = ({ onLogin }) => {
 
           <button
             type="submit"
-            className="w-full bg-primary hover:bg-teal-700 text-white text-sm py-3 rounded-md transition duration-150 font-medium tracking-wider mt-8"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed
+              text-white text-sm py-3 rounded-md transition duration-150 font-medium tracking-wider mt-8"
           >
-            SIGN IN
+            {loading ? "Signing in..." : "SIGN IN"}
           </button>
         </form>
 

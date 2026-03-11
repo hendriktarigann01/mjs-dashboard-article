@@ -7,7 +7,7 @@ import AssignmentIcon from "../icons/PublishedIcon";
 import FolderIcon from "../icons/FolderIcon";
 
 const Navbar = ({ isOpen, onClose }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(true); // Set default true
+  const [dropdownOpen, setDropdownOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -66,7 +66,6 @@ const Navbar = ({ isOpen, onClose }) => {
 
   const handleDropdownItemClick = (dropdownItem) => {
     navigate(dropdownItem.path);
-    // Tidak menutup dropdown dan navbar - biarkan tetap terbuka
   };
 
   return (
@@ -82,14 +81,14 @@ const Navbar = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <div
         className={`
-                    z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-                    fixed inset-y-0 left-0
-                    ${isOpen ? "translate-x-0" : "-translate-x-full"}
-                    md:sticky md:top-0 md:translate-x-0 md:h-screen
-                  `}
+          z-40 w-64 bg-white h-full overflow-y-auto flex-shrink-0
+          transform transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:static md:translate-x-0
+        `}
       >
         <div className="flex flex-col h-full pt-16 md:pt-0">
-          {/* Navigation Menu */}
           <nav className="flex-1 px-2 py-4 bg-white">
             <ul className="space-y-2">
               {menuItems.map((item, index) => (
@@ -102,7 +101,7 @@ const Navbar = ({ isOpen, onClose }) => {
                         w-full flex items-center justify-between px-4 py-4 text-sm font-medium rounded-md transition-colors duration-150
                       ${
                         item.active
-                          ? "bg-secondary text-primary border-r-2 border-primary"
+                          ? "bg-secondary text-primary"
                           : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                       }
                       `}
@@ -146,8 +145,8 @@ const Navbar = ({ isOpen, onClose }) => {
                               }
                               className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
                                 location.pathname === dropdownItem.path
-                                  ? "text-primary bg-gray-50"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  ? "text-primary"
+                                  : "text-gray-600 hover:text-gray-900"
                               }`}
                             >
                               <dropdownItem.icon
@@ -159,7 +158,7 @@ const Navbar = ({ isOpen, onClose }) => {
                               />{" "}
                               {dropdownItem.label}
                             </button>
-                          )
+                          ),
                         )}
                       </div>
                     )}

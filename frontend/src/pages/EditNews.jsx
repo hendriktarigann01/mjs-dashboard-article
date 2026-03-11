@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "./MainLayout";
 import SuccessModal from "../components/SuccessModal";
 import { Dot, ChevronRight } from "lucide-react";
@@ -8,8 +9,6 @@ import "quill/dist/quill.snow.css";
 import WriteIcon from "../icons/WriteIcon";
 import api from "../lib/api";
 
-const AUTOSAVE_DELAY = 2000;
-
 const QUILL_TOOLBAR = [
   [{ header: [1, 2, 3, false] }],
   ["bold", "italic", "underline", "strike"],
@@ -18,52 +17,57 @@ const QUILL_TOOLBAR = [
   ["clean"],
 ];
 
-const initialForm = { title: "", description: "" };
+const EditNews = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-const CreateNews = () => {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState({ title: "", description: "" });
   const [imageFiles, setImageFiles] = useState([]);
-  const [saveStatus, setSaveStatus] = useState("saved"); // "saving" | "saved" | "error"
+  const [existingImages, setExistingImages] = useState([]);
+  const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
   const [loading, setLoading] = useState(false);
-  const [loadingDraft, setLoadingDraft] = useState(true);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState(null);
+  const [submittedStatus, setSubmittedStatus] = useState(null);
 
   const autosaveTimer = useRef(null);
   const quillRef = useRef(null);
   const quillInstance = useRef(null);
-  const formRef = useRef(form); // ref untuk akses form terbaru di closure
+  const initialData = useRef(null);
 
-  // Sync formRef setiap form berubah
+  // Fetch existing data
   useEffect(() => {
-    formRef.current = form;
-  }, [form]);
-
-  // Load autosave dari Redis, simpan ke ref dulu
-  const autosaveData = useRef(null);
-
-  useEffect(() => {
-    const loadAutosave = async () => {
+    const fetchNews = async () => {
       try {
-        const res = await api.get("/autosave/news");
-        if (res.data.data) {
-          autosaveData.current = res.data.data;
-          setForm(res.data.data);
-        }
-      } catch (_) {
-        //
+        const res = await api.get(`/news/get-news/${id}`);
+        const data = res.data;
+        initialData.current = data;
+        setForm({
+          title: data.title,
+          description: data.description,
+        });
+        setExistingImages(
+          Array.isArray(data.image_news)
+            ? data.image_news
+            : data.image_news
+              ? [data.image_news]
+              : [],
+        );
+      } catch (err) {
+        setError("Gagal memuat data news");
       } finally {
-        setLoadingDraft(false);
+        setFetching(false);
       }
     };
-    loadAutosave();
-  }, []);
+    fetchNews();
+  }, [id]);
 
-  
+  // Init Quill setelah data loaded
   useEffect(() => {
-    if (loadingDraft) return; 
-    if (quillInstance.current) return; 
+    if (fetching) return;
+    if (quillInstance.current) return;
     if (!quillRef.current) return;
 
     quillInstance.current = new Quill(quillRef.current, {
@@ -72,9 +76,8 @@ const CreateNews = () => {
       modules: { toolbar: QUILL_TOOLBAR },
     });
 
-    // Set autosave content jika ada
-    if (autosaveData.current?.description) {
-      quillInstance.current.root.innerHTML = autosaveData.current.description;
+    if (initialData.current?.description) {
+      quillInstance.current.root.innerHTML = initialData.current.description;
     }
 
     quillInstance.current.on("text-change", () => {
@@ -87,7 +90,7 @@ const CreateNews = () => {
     });
 
     return () => clearTimeout(autosaveTimer.current);
-  }, [loadingDraft]);
+  }, [fetching]);
 
   const triggerAutosave = useCallback((data) => {
     setSaveStatus("saving");
@@ -99,7 +102,7 @@ const CreateNews = () => {
       } catch (_) {
         setSaveStatus("error");
       }
-    }, AUTOSAVE_DELAY);
+    }, 2000);
   }, []);
 
   const handleChange = (e) => {
@@ -122,28 +125,28 @@ const CreateNews = () => {
       formData.append("description", form.description);
       formData.append("status", status);
       imageFiles.forEach((file) => formData.append("image_news", file));
+      if (existingImages.length > 0)
+        formData.append("existing_images", JSON.stringify(existingImages));
 
-      await api.post("/news/create-news", formData, {
+      await api.put(`/news/update-news/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Hapus autosave dari Redis setelah berhasil submit
       await api.delete("/autosave/news");
-
-      if (quillInstance.current) quillInstance.current.root.innerHTML = "";
       // Capture image URL before any state reset
       let capturedImageUrl = null;
       if (imageFiles.length > 0) {
         capturedImageUrl = URL.createObjectURL(imageFiles[0]);
+      } else if (existingImages && existingImages.length > 0) {
+        capturedImageUrl = existingImages[0];
       }
       setSuccessItem({
         title: form.title,
         description: form.description,
         imageUrl: capturedImageUrl,
       });
+      setSubmittedStatus(status);
       setSuccess(true);
-      setForm(initialForm);
-      setImageFiles([]);
     } catch (err) {
       setError(err.response?.data?.error || "Gagal menyimpan news");
     } finally {
@@ -152,20 +155,30 @@ const CreateNews = () => {
   };
 
   const saveStatusLabel = {
+    idle: { text: "", color: "text-gray-400" },
     saving: { text: "Saving...", color: "text-yellow-400" },
     saved: { text: "Saved", color: "text-[#3AAFA9]" },
     error: { text: "Save failed", color: "text-red-400" },
   };
 
   if (success) {
+    const isDraft = submittedStatus === "draft";
     return (
       <MainLayout showNavbar={true} showSearch={true}>
         <SuccessModal
-          title="Draft News Successfully"
-          subtitle="Your content has been saved as a draft. You can continue editing it anytime."
+          title={
+            isDraft ? "Draft News Successfully" : "Publish News Successful"
+          }
+          subtitle={
+            isDraft
+              ? "Your content has been saved as a draft. You can continue editing it anytime."
+              : undefined
+          }
           item={successItem}
-          primaryLabel="Continue Writing"
-          onPrimary={() => setSuccess(false)}
+          primaryLabel={isDraft ? "Continue Writing" : "View Page"}
+          onPrimary={() => (isDraft ? navigate(-1) : navigate("/published"))}
+          secondaryLabel="Back to Dashboard"
+          onSecondary={() => navigate("/")}
         />
       </MainLayout>
     );
@@ -183,23 +196,25 @@ const CreateNews = () => {
                 Write
               </span>
             </div>
-            <div className="flex items-center text-sm">
-              <Dot
-                className={`w-12 h-12 ${saveStatusLabel[saveStatus].color}`}
-              />
-              <span
-                className={`font-normal text-sm ${saveStatusLabel[saveStatus].color}`}
-              >
-                {saveStatusLabel[saveStatus].text}
-              </span>
-            </div>
+            {saveStatus !== "idle" && (
+              <div className="flex items-center text-sm">
+                <Dot
+                  className={`w-12 h-12 ${saveStatusLabel[saveStatus].color}`}
+                />
+                <span
+                  className={`font-normal text-sm ${saveStatusLabel[saveStatus].color}`}
+                >
+                  {saveStatusLabel[saveStatus].text}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center text-xs">
             <WriteIcon className="w-4 h-4 fill-current text-[#3AAFA9] mr-2" />
             <ChevronRight className="w-4 h-4 mx-2" />
             <span className="text-[#414853]">Write</span>
             <ChevronRight className="w-4 h-4 mx-2" />
-            <span className="text-[#414853]">Create News</span>
+            <span className="text-[#414853]">Edit News</span>
           </div>
         </div>
 
@@ -209,8 +224,7 @@ const CreateNews = () => {
           </div>
         )}
 
-        {/* Skeleton saat load autosave */}
-        {loadingDraft ? (
+        {fetching ? (
           <div className="bg-white rounded-lg shadow-sm px-4 md:px-10 py-8 animate-pulse space-y-4">
             <div className="h-6 bg-gray-200 rounded w-1/4" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -228,7 +242,7 @@ const CreateNews = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-sm px-4 md:px-10 py-8">
             <h1 className="text-2xl font-semibold text-[#414853] mb-8">
-              Create News
+              Edit News
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -247,7 +261,6 @@ const CreateNews = () => {
                     className="w-full border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#3AAFA9]"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-[#414853] mb-1">
                     Description<span className="text-red-500">*</span>
@@ -264,19 +277,35 @@ const CreateNews = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-[#414853] mb-1">
-                    Upload Image<span className="text-red-500">*</span>
+                    Upload Image
                   </label>
-                  <ImageUploader files={imageFiles} onChange={setImageFiles} />
+                  <ImageUploader
+                    files={imageFiles}
+                    onChange={setImageFiles}
+                    existingUrls={existingImages}
+                    onRemoveExisting={(i) =>
+                      setExistingImages((prev) =>
+                        prev.filter((_, idx) => idx !== i),
+                      )
+                    }
+                  />
                 </div>
 
                 <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="flex-1 border border-gray-300 text-gray-600 text-sm font-medium px-6 py-2 rounded-md hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleSubmit("draft")}
                     disabled={!isFormValid || loading}
                     className="flex-1 border border-[#3AAFA9] text-[#3AAFA9] text-sm font-medium px-6 py-2 rounded-md hover:bg-[#E6F8F7] transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {loading ? "Menyimpan..." : "Save Draft"}
+                    {loading ? "Saving..." : "Save Draft"}
                   </button>
                   <button
                     type="button"
@@ -284,7 +313,7 @@ const CreateNews = () => {
                     disabled={!isFormValid || loading}
                     className="flex-1 bg-[#3AAFA9] text-white text-sm font-medium px-6 py-2 rounded-md hover:bg-teal-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {loading ? "Menyimpan..." : "Publish"}
+                    {loading ? "Saving..." : "Publish"}
                   </button>
                 </div>
               </div>
@@ -296,4 +325,4 @@ const CreateNews = () => {
   );
 };
 
-export default CreateNews;
+export default EditNews;
