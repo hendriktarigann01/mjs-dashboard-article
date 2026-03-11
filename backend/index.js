@@ -10,6 +10,8 @@ const { connectDb } = require("./lib/db.js");
 const authRoutes = require("./routes/route.auth.js");
 const newsRoutes = require("./routes/route.news.js");
 const projectRoutes = require("./routes/route.project.js");
+const statsRoutes = require("./routes/route.stats.js");
+const autoSaveRoutes = require("./routes/route.autosave.js");
 
 // MiddleWare
 const authMiddleware = require("./middleware/middleware.auth.js");
@@ -26,6 +28,8 @@ app.use(express.json({ limit: "10mb" }));
 app.use("/api/auth/", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/autosave", autoSaveRoutes);
 
 app.get("/api/dashboard", authMiddleware, (req, res) => {
   res.json({
@@ -35,6 +39,6 @@ app.get("/api/dashboard", authMiddleware, (req, res) => {
 
 // Run Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
   connectDb();
 });
