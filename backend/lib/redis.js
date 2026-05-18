@@ -1,18 +1,34 @@
 const { createClient } = require("redis");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+const {
+  REDIS_USERNAME = "default",
+  REDIS_PASSWORD,
+  REDIS_HOST,
+  REDIS_PORT,
+} = process.env;
+
+if (!REDIS_PASSWORD || !REDIS_HOST || !REDIS_PORT) {
+  console.warn(
+    "Redis env not fully configured (REDIS_PASSWORD/REDIS_HOST/REDIS_PORT missing). Skipping Redis connect.",
+  );
+}
 
 const redis = createClient({
-  username: "default",
-  password: "WyWPpQFh9f9A1HiZdFrNyG3KymsA8C1E",
+  username: REDIS_USERNAME,
+  password: REDIS_PASSWORD,
   socket: {
-    host: "redis-17970.c334.asia-southeast2-1.gce.cloud.redislabs.com",
-    port: 17970,
+    host: REDIS_HOST,
+    port: Number(REDIS_PORT),
   },
 });
 
 redis.on("error", (err) => console.error("Redis Client Error:", err.message));
 
-// Connect saat module pertama kali di-load
 (async () => {
+  if (!REDIS_PASSWORD || !REDIS_HOST || !REDIS_PORT) return;
   await redis.connect();
   console.log("Redis Cloud connected");
 })();
