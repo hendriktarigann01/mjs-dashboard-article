@@ -76,6 +76,7 @@ const EditProject = () => {
               ? [data.image_project]
               : [],
         );
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
         setError("Gagal memuat data project");
       } finally {

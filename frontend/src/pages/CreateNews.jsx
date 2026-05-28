@@ -51,6 +51,7 @@ const CreateNews = () => {
           autosaveData.current = res.data.data;
           setForm(res.data.data);
         }
+      // eslint-disable-next-line no-unused-vars
       } catch (_) {
         //
       } finally {
@@ -96,6 +97,7 @@ const CreateNews = () => {
       try {
         await api.post("/autosave/news", data);
         setSaveStatus("saved");
+      // eslint-disable-next-line no-unused-vars
       } catch (_) {
         setSaveStatus("error");
       }
